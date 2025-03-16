@@ -7,23 +7,15 @@ library(rvest)
 library(httr)
 library(stringr)
 
+readRenviron(".Renviron")
+cookie <- Sys.getenv("cookie")
+username <- Sys.getenv("titanica_username")
+password <- Sys.getenv("titanica_password")
+
 url <- "https://www.encyclopedia-titanica.org/titanic-passenger-list/"
 headers <- c(
-  "Accept" = "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-  "Accept-Language" = "da-DK,da;q=0.9,en-US;q=0.8,en;q=0.7",
-  "Cache-Control" = "max-age=0",
-  "Cookie" = "__cmpcc=1; _ga=GA1.1.1756057943.1741612404; __cmpconsentx86685=CQODSZgQODSZgAfKtBDABgFsAP_gAEPgAAigJ0pF9C5cRSFD4Gp3IJoEIAUHwFBAYEAgBgQBA4ABSBKAMIwEgAAAAACIIAAAAAAAIAAAAAAACAgAAEAAQIAAIQAIAEAAAAACIAAAAAABAAAAAAgAAAAgEAAAAAAAAAAAgAAAAAIAQEgAAAAAAQAAIAAAAAAAAAAAAAAAQAAAQAAIAKgAAAAAAAAAAAAACBAAAAAAAAAAAAAAAQAAAAACCdMDIABAACwAHAAVAAuABwADwAIAASAAqABkADQAHAAPAAiABHACYAFUANAAegA_ACEAEcAJwAVoAwABlADRAHIAOcAdwA_YCDgIQARYAn4BrwDiAHUAO2Ae0A_4CYgFDgKlAXmAyQBlgD5AH7gTpAAA.f_wACHwAAAA; __cmpcccx86685=aCQOFPaZgAAFlpYEyoyqsKGQE1I0RDIkswAUoSkY; _lr_env_src_ats=false; _scor_uid=95611a7dc6e5424a88497992d798a10f; panoramaId_expiry=1742217206010; _cc_id=364e06ceca377e8ac5d59007ca6bd7db; panoramaId=222956d6439cf719343c60b73498185ca02c59e91faa8eab80d668879ec0ecb9; sib_cuid=a8b9ed00-8b9b-40d1-8bf8-fa0b766de97f; po_visitor=QKPCqUL2Kozu; xf_csrf=lE-X3JZIRWBY62VK; xf_user=223038%2C2uQb4VuvuwjnBXky8p3ABFLFbzpfcqY_wBGeuBIQ; xf_session=zfKQhrI71OKsAcX8VEae8TtAxmJrhZHn; etli=jbnlRrdgb9UL987X4NAQkFxKnWm0g6hsUpK; etsc=sjcvfhskjdljeljdjeajfj7uh; __qca=I0-1386231568-1741942272542; sbjs_migrations=1418474375998%3D1; sbjs_current_add=fd%3D2025-03-14%2008%3A56%3A13%7C%7C%7Cep%3Dhttps%3A%2F%2Fwww.encyclopedia-titanica.org%2Fstore%2Fproduct%2Ftitanic-deckplans%2F%7C%7C%7Crf%3Dhttps%3A%2F%2Fwww.encyclopedia-titanica.org%2F; sbjs_first_add=fd%3D2025-03-14%2008%3A56%3A13%7C%7C%7Cep%3Dhttps%3A%2F%2Fwww.encyclopedia-titanica.org%2Fstore%2Fproduct%2Ftitanic-deckplans%2F%7C%7C%7Crf%3Dhttps%3A%2F%2Fwww.encyclopedia-titanica.org%2F; sbjs_current=typ%3Dtypein%7C%7C%7Csrc%3D%28direct%29%7C%7C%7Cmdm%3D%28none%29%7C%7C%7Ccmp%3D%28none%29%7C%7C%7Ccnt%3D%28none%29%7C%7C%7Ctrm%3D%28none%29%7C%7C%7Cid%3D%28none%29%7C%7C%7Cplt%3D%28none%29%7C%7C%7Cfmt%3D%28none%29%7C%7C%7Ctct%3D%28none%29; __stripe_mid=fb3ad2ce-d59e-4651-8a02-f32c1172d719edff8c; sbjs_udata=vst%3D2%7C%7C%7Cuip%3D%28none%29%7C%7C%7Cuag%3DMozilla%2F5.0%20%28Macintosh%3B%20Intel%20Mac%20OS%20X%2010_15_7%29%20AppleWebKit%2F537.36%20%28KHTML%2C%20like%20Gecko%29%20Chrome%2F133.0.0.0%20Safari%2F537.36; __gads=ID=a6884eaa993e662a:T=1741612406:RT=1741951394:S=ALNI_MYTA3ZmXwv0ee6I1UgouNKzMd9-1w; __gpi=UID=00001058ea700fa4:T=1741612406:RT=1741951394:S=ALNI_MabLxGMo7_MTnDFRWzThZHbCFTqGA; __eoi=ID=ca7c88f1af652660:T=1741612406:RT=1741951394:S=AA-AfjZGmzKlBb1RPMVFYW2P2Cka; cf_clearance=UI5BuDNZrYQzwt7yF2QijXAfErch.JI40b3Hh6Pijj0-1741951627-1.2.1.1-OIVHImvQx.ZzHC8Iyb4jCvQx3BcFg150SZtYWA5Ycgxi522A3oJ83SaJDUiq7wySJFX_g3v08MeBd_PIOte4KQZSJRQyYjOqQEnB7Ux7iQwDmZ71AjltrKA1bjlaVDUIGYKqL6d1VsjffLXntGY.6q0dsFFkFRcN_mOZQT2_ZFWH4jnVw.0pGVS3675thUwdbZnxn5QD0numKhrm5UL.4tKS6xr0qiEnmVZcFn3_pae65H5N3wDp6V3p9Aoyj9R92cLsoTmicv7DCnQdPoeCmbMZNh.by6nJL443ZOqPCUhUjtibi0X12WiUs0XLjMX_jZNtKBuKZ6bp3Y28gXclxpH0ImRWQKtzaMD5icUri5E",
-  "Priority" = "u=0, i",
-  "Referer" = "https://www.encyclopedia-titanica.org/titanic-passenger-list/",
-  "Sec-CH-UA" = '"Not(A:Brand";v="99", "Google Chrome";v="133", "Chromium";v="133")',
-  "Sec-CH-UA-Mobile" = "?0",
-  "Sec-CH-UA-Platform" = '"macOS"',
-  "Sec-Fetch-Dest" = "document",
-  "Sec-Fetch-Mode" = "navigate",
-  "Sec-Fetch-Site" = "same-origin",
-  "Sec-Fetch-User" = "?1",
-  "Upgrade-Insecure-Requests" = "1",
-  "User-Agent" = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+  "User-Agent" = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
+  "Cookie" = cookie
 )
 
 response <- GET(url, add_headers(.headers = headers))
@@ -34,23 +26,94 @@ colnames(links) <- "links"
 victims <- links[grepl("/titanic-victim/", links$links), , drop = FALSE]
 survivors <- links[grepl("/titanic-survivor/",links$links),,drop=F]
 
-allpassangers <- rbind(victims,survivors)
+allpassangers_df <- rbind(victims,survivors)
 
 
-### big scrape ###
+#### big scrape ####
 #allpassangers <- allpassangers[1,]
-allpassangers <- as.factor(allpassangers$links)
+allpassangers <- as.factor(allpassangers_df$links)
 #url + heder tilføjelser/sammensætning
 Titanic <- "https://www.encyclopedia-titanica.org"
-username <- "dit_brugernavn"
-password <- "din_kode"
 
-#tom liste - fyld den bitch up yo
+passenger_data <- list()  
+
+for (i in seq_along(allpassangers)) {
+  url <- paste0(Titanic, allpassangers[i])
+  Sys.sleep(runif(1, 0.2, 0.4))  # be kind to the server :-)
+  
+  page <- read_html(GET(url, add_headers(.headers = headers), authenticate(username, password)) %>% 
+                      httr::content(as = "text", encoding = "UTF-8"))
+  
+  # takes out the full raw summary
+  full_summary <- page %>% html_node("#summary") %>% html_text(trim = TRUE)
+  
+  # grab all nodes inside #summary (not just immediate siblings)
+  summary_nodes <- page %>% html_nodes("#summary *")
+  
+  passenger_info <- list()
+  last_key <- NULL
+  
+  # loop through all nodes inside #summary
+  for (node in summary_nodes) {
+    key <- node %>% html_node("strong") %>% html_text(trim = TRUE)  # get field name
+    value <- html_text(node, trim = TRUE)  # get corresponding value
+    
+    if (!is.na(key) && key != "") {
+      passenger_info[[key]] <- value
+      last_key <- key 
+    } else if (!is.null(last_key) && value != "") {
+      # if value belongs to the previous key, append it
+      passenger_info[[last_key]] <- paste(passenger_info[[last_key]], value, sep = " ")
+    }
+  }
+  
+  # take it if titanic victum or survived
+  passenger_info[["Survival Status"]] <- page %>% 
+    html_node("#summary a[href*='titanic-victims'], #summary a[href*='titanic-survivors']") %>% 
+    html_text(trim = TRUE)
+  
+
+  passenger_info[["Full Summary"]] <- full_summary
+  passenger_info[["Link"]] <- url
+  passenger_data[[i]] <- as.data.frame(t(passenger_info), stringsAsFactors = FALSE)
+  
+  # i like little updates, makes me feel cool
+  cat(paste0("Passengers scraped: ", i, " out of ", length(allpassangers), "\n"))
+}
+
+passenger_df <- NULL
+passenger_df <- bind_rows(lapply(passenger_data, as.data.frame), .id = "Passenger_ID")
+
+
+#saveRDS(passenger_df,"clutter/passengerLoop.RDS")
+passenger_df <- readRDS("clutter/passengerLoop.RDS")
+
+# data cleaning:
+# Name
+passenger_df$Name <- passenger_df$Name %>%
+  str_remove("^Name:\\s*") %>%  # Remove leading "Name: "
+  str_replace("^([^ ]+ [^ ]+ [^ ]+).*", "\\1")  # Keep only the first full name
+
+# Age
+passenger_df$Birthdate <- str_extract(passenger_df$Born, ".*(?= in )") # saves birthdate
+passenger_df$Birthplace <- str_remove(passenger_df$Born, ".*? in ") # saves birthplace
+passenger_df <- passenger_df %>% select(-Born)
+passenger_df <- passenger_df %>% select(Passenger_ID, Name, Birthdate, Birthplace, everything())
+
+# Age / Sex
+passenger_df$Age <- str_remove(passenger_df$Age, "^Age:\\s*")
+
+
+i
+
+#### the lucky luke loop ####
 passenger_data <- list()
 
 for (i in allpassangers) {
-  url <- paste0(Titanic, i)
   
+  url <- paste0(Titanic, i)
+  #Sys.sleep(runif(1, min = 0.2, max = 0.4))
+
   rawres <- GET(url, add_headers(.headers = headers),authenticate(username, password))
   
   
@@ -73,15 +136,12 @@ passenger_df <- data.frame(
   stringsAsFactors = FALSE
 )
 
-head(passenger_df)
+saveRDS(passenger_df,"clutter/Scraped.RDS")
 
-#gem den til stringer-manipulation
-#saveRDS(passenger_df,"Documents/DAL-Projects/2.semester/flow2/titanic/SCRAPEDTITANIC.RDS")
 
 ##### den endelige scrape - mangler struktur og stringextract's ####
 
-scrapedTitanic <- readRDS("Documents/DAL-Projects/2.semester/flow2/titanic/SCRAPEDTITANIC.RDS") #<- min path
-scrapedTitanic <- readRDS("DIN_PATH_HER")
+scrapedTitanic <- readRDS("clutter/Scraped.RDS")
 
 #stringR_magic
 scrapedTitanic <- scrapedTitanic %>%
