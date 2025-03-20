@@ -72,7 +72,12 @@ for (i in seq_along(allpassangers)) {
     html_node("#summary a[href*='titanic-victims'], #summary a[href*='titanic-survivors']") %>% 
     html_text(trim = TRUE)
   
-
+  # Extract passenger class (1st, 2nd, 3rd Class)
+  class_info <- page %>% html_node("a[title*='Class Passengers']") %>% html_text(trim = TRUE)
+  
+  if (!is.na(class_info) && class_info != "") {
+    passenger_info[["Class"]] <- class_info
+  }
   passenger_info[["Full Summary"]] <- full_summary
   passenger_info[["Link"]] <- url
   passenger_data[[i]] <- as.data.frame(t(passenger_info), stringsAsFactors = FALSE)
@@ -89,6 +94,24 @@ passenger_df <- bind_rows(lapply(passenger_data, as.data.frame), .id = "Passenge
 passenger_df <- readRDS("clutter/passengerLoop.RDS")
 
 # data cleaning:
+# get class
+passenger_df <- passenger_df %>%
+  mutate(ticket = as.factor(str_extract(`Ticket No`, "(?<=Ticket No\\. )\\d+")))
+titanicBoats <- titanicBoats %>%
+  mutate(ticket = as.factor(str_extract(ticket, "\\d+")))
+
+passenger_df <- passenger_df %>%
+  left_join(titanicBoats %>% select(ticket, pclass), by = "ticket")
+
+passenger_df <- passenger_df %>%
+  select(-1) %>%  
+  relocate(Name, pclass)  
+passenger_df <- passenger_df %>%
+  select(-ticket)
+
+saveRDS(passenger_df,"titanica_passengerinfo_raw.RDS")
+
+
 # Name
 passenger_df$Name <- passenger_df$Name %>%
   str_remove("^Name:\\s*") %>%  # Remove leading "Name: "
@@ -102,10 +125,29 @@ passenger_df <- passenger_df %>% select(Passenger_ID, Name, Birthdate, Birthplac
 
 # Age / Sex
 passenger_df$Age <- str_remove(passenger_df$Age, "^Age:\\s*")
+passenger_df <- passenger_df %>%
+  mutate(
+    Age_Before_Paren = str_extract(Age, "^[^)]+\\)"),   # Everything before and including `)`
+    Age_After_Paren = str_extract(Age, "(?<=\\))\\s*.*") # Everything after `)`, keeping spaces
+  )
+passenger_df <- passenger_df %>%
+  mutate(Age_After_Paren = str_extract(Age_After_Paren, "\\[.*?\\]"))
 
+# make into boolean
+passenger_df <- passenger_df %>%
+  mutate(Is.Child = !is.na(Age_After_Paren))
+
+# split age and sex
+passenger_df <- passenger_df %>%
+  mutate(Sex = str_extract(Age_Before_Paren, "\\((.*?)\\)"),  # Extract text inside ()
+         Age_Before_Paren = str_remove(Age_Before_Paren, "\\s*\\(.*?\\)"))  # Remove (text) from original column
+
+
+
+
+passenger_df$Religion <- as.character(passenger_df$Religion)
 
 i
-
 #### the lucky luke loop ####
 passenger_data <- list()
 
