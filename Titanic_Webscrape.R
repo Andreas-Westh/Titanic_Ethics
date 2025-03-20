@@ -91,6 +91,7 @@ passenger_df <- bind_rows(lapply(passenger_data, as.data.frame), .id = "Passenge
 
 
 #saveRDS(passenger_df,"clutter/passengerLoop.RDS")
+passenger_df <- NULL
 passenger_df <- readRDS("clutter/passengerLoop.RDS")
 
 # data cleaning:
@@ -108,6 +109,9 @@ passenger_df <- passenger_df %>%
   relocate(Name, pclass)  
 passenger_df <- passenger_df %>%
   select(-ticket)
+
+passenger_df <- passenger_df[!duplicated(passenger_df$Name), ]
+
 
 saveRDS(passenger_df,"titanica_passengerinfo_raw.RDS")
 
