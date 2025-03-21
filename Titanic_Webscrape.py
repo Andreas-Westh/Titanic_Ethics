@@ -23,6 +23,7 @@ headers = {
 
 # Send GET
 response = requests.get(url, headers=headers,cookies=cookies)
+print(response)
 
 # parse HTML
 soup = BeautifulSoup(response.text, "html.parser")
@@ -46,7 +47,7 @@ while proceed:  # Always True since there is only one page, but follows guide st
 
         # Extract name from <span class="fn">
         name_tag = passenger.select_one("span.fn")
-        item["Name"] = name_tag.get_text(strip=True) if name_tag else "Unknown"
+        item["Name"] = name_tag.get_text(strip=False) if name_tag else "Unknown"
 
         # Extract profile link from <a itemprop="url">
         link_tag = passenger.select_one("a[itemprop='url']")
